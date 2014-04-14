@@ -2,19 +2,43 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="mn.uweb.smsdbslave" >
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
+        android:name="mn.uweb.smsdbslave.ApplicationSMSDBSlave"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="mn.uweb.smsdbslave.Slave"
-            android:label="@string/app_name" >
+            android:name="mn.uweb.smsdbslave.ActivityMain"
+            android:label="@string/title_activity_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <receiver android:name="mn.uweb.smsdbslave.EventSystemBoot" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name="mn.uweb.smsdbslave.CronFetchSMS" />
+
+        <service
+            android:name="mn.uweb.smsdbslave.ScheduleCronService"
+            android:exported="false" />
+
+        <activity
+            android:name="mn.uweb.smsdbslave.ActivitySettings"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName="mn.uweb.smsdbslave.ActivityMain">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="mn.uweb.smsdbslave.ActivityMain"/>
         </activity>
     </application>
 

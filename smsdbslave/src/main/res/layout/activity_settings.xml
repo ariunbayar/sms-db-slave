@@ -1,0 +1,81 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="mn.uweb.smsdbslave.ActivitySettings">
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="API URL for sms_received: "/>
+        <EditText
+            android:id="@+id/api_url"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="API Key: "/>
+        <EditText
+            android:id="@+id/api_key"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+        <CheckBox
+            android:id="@+id/notify"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Notify when send or receive SMS?"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send application crash report to: "/>
+        <EditText
+            android:id="@+id/report_url"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Crash report user name: "/>
+        <EditText
+            android:id="@+id/report_username"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Crash report password: "/>
+        <EditText
+            android:id="@+id/report_password"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+        <Button
+            android:id="@+id/button_save"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Save this settings"
+            android:onClick="saveSettings" />
+    </LinearLayout>
+</RelativeLayout>
