@@ -15,6 +15,7 @@ public class ApplicationSMSDBSlave extends android.app.Application {
         super.onCreate();
 
         ACRAConfiguration acra_conf = ACRA.getConfig();
+        // make sure this is an encrypted connection
         acra_conf.setFormUri(getSetting("report_url"));
         acra_conf.setFormUriBasicAuthLogin(getSetting("report_username"));
         acra_conf.setFormUriBasicAuthPassword(getSetting("report_password"));

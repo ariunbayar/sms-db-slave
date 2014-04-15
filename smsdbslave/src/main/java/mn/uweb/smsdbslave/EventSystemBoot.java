@@ -10,7 +10,8 @@ public class EventSystemBoot extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Intent mServiceIntent = new Intent(context, ScheduleCronService.class);
-        context.startService(mServiceIntent);
+        Intent cron_service_intent = new Intent(context, ScheduleCronService.class);
+        cron_service_intent.putExtra(ScheduleCronService.MESSAGE, "start");
+        context.startService(cron_service_intent);
     }
 }

@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">SMS DB Slave</string>
-    <string name="hello_world">Hello world!</string>
     <string name="title_activity_main">SMS List</string>
     <string name="title_activity_settings">Settings</string>
 

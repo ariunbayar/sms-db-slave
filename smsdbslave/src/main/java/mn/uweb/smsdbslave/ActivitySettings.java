@@ -1,12 +1,18 @@
 package mn.uweb.smsdbslave;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.text.Editable;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import org.acra.ACRA;
+
+import java.util.prefs.Preferences;
 
 
 public class ActivitySettings extends ActionBarActivity {
@@ -41,22 +47,33 @@ public class ActivitySettings extends ActionBarActivity {
     }
 
     protected void showToast(String msg){
-        Toast t = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
+        Context ctx = getApplicationContext();
+        if (ctx == null) {
+            Exception e = new Exception("Probably impossible. Application context was nonexistent!");
+            ACRA.getErrorReporter().handleException(e);
+            return;
+        }
+        Toast t = Toast.makeText(ctx, msg, Toast.LENGTH_LONG);
         t.show();
+    }
+
+    private String _getTextSafe(EditText editText) {
+        Editable e = editText.getText();
+        return e == null ? "" : e.toString();
     }
 
     public void saveSettings(View view) {
         // TODO already loaded ACRA settings must affect
-        // TODO make sure the cron tasks affect
-        prefs
-                .edit()
-                .putString("api_url", text_api_url.getText().toString())
-                .putString("api_key", text_api_key.getText().toString())
-                .putString("notify", check_notify.isChecked() ? "yes" : "no")
-                .putString("report_url", text_report_url.getText().toString())
-                .putString("report_username", text_report_username.getText().toString())
-                .putString("report_password", text_report_password.getText().toString())
-                .commit();
+        // TODO encrypt these data
+        // TODO include cron interval settings
+        SharedPreferences.Editor e = prefs.edit();
+        e.putString("api_url", _getTextSafe(text_api_url));
+        e.putString("api_key", _getTextSafe(text_api_key));
+        e.putString("notify", check_notify.isChecked() ? "yes" : "no");
+        e.putString("report_url", _getTextSafe(text_report_url));
+        e.putString("report_username", _getTextSafe(text_report_username));
+        e.putString("report_password", _getTextSafe(text_report_password));
+        e.commit();
 
         showToast("Settings Saved!");
     }

@@ -6,9 +6,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import java.sql.Timestamp;
+import org.acra.ACRA;
+
 import java.util.ArrayList;
-import java.sql.Date;
 import java.util.List;
 
 public class DBHandler extends SQLiteOpenHelper {
@@ -17,7 +17,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     private static final String
             DB_NAME = "uweb",
-            TABLE_NAME = "sms",
+            TABLE_SMS = "sms",
             FIELD_ID = "id",
             FIELD_PHONE = "phone",
             FIELD_BODY = "body",
@@ -33,15 +33,15 @@ public class DBHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(
-            "CREATE TABLE " + TABLE_NAME + " (" +
-                FIELD_ID         + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                FIELD_PHONE      + " TEXT, " +
-                FIELD_BODY       + " TEXT, " +
-                FIELD_STATUS     + " INTEGER, " +
-                FIELD_SMS_ID     + " INTEGER, " +
-                FIELD_SYNCED     + " INTEGER, " +
-                FIELD_CREATED_AT + " INTEGER" +
-            ")"
+                "CREATE TABLE " + TABLE_SMS + " (" +
+                        FIELD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        FIELD_PHONE + " TEXT, " +
+                        FIELD_BODY + " TEXT, " +
+                        FIELD_STATUS + " INTEGER, " +
+                        FIELD_SMS_ID + " INTEGER, " +
+                        FIELD_SYNCED + " INTEGER, " +
+                        FIELD_CREATED_AT + " INTEGER" +
+                        ")"
         );
     }
 
@@ -49,15 +49,13 @@ public class DBHandler extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         String backup_table = String.valueOf(System.currentTimeMillis());
 
-        db.execSQL("ALTER TABLE " + TABLE_NAME + " RENAME TO " + backup_table);
+        db.execSQL("ALTER TABLE " + TABLE_SMS + " RENAME TO " + backup_table);
         // TODO ability to list sms from old tables
 
         onCreate(db);
     }
 
-    public void insertSMS(SMS sms) {
-        SQLiteDatabase db = getWritableDatabase();
-
+    public boolean insert(SMS sms) {
         ContentValues values = new ContentValues();
 
         values.put(FIELD_PHONE, sms.getPhone());
@@ -67,45 +65,48 @@ public class DBHandler extends SQLiteOpenHelper {
             values.put(FIELD_SMS_ID, sms.getSMSId());
         }
         values.put(FIELD_SYNCED, sms.getBody());
-        values.put(FIELD_CREATED_AT, sms.getBody());
+        values.put(FIELD_CREATED_AT, sms.getCreatedAt());
 
-        db.insert(TABLE_NAME, null, values);
+        SQLiteDatabase db = getWritableDatabase();
+        if (db == null) {
+            Exception e = new Exception("Couldn't get writable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return false;
+        }
+
+        db.insert(TABLE_SMS, null, values);
         db.close();
+        return true;
     }
 
-    /*
-    public SMS getSMS(int id) {
+    public Boolean has(int sms_id) {
+        String query = "SELECT * FROM " + TABLE_SMS + " WHERE " + FIELD_SMS_ID + "=?";
+        String[] args = new String[] { String.valueOf(sms_id) };
+
         SQLiteDatabase db = getReadableDatabase();
+        if (db == null) {
+            Exception e = new Exception("Couldn't get readable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return null;
+        }
 
-        Cursor cursor = db.query(
-                TABLE,
-                new String[] { ID, PHONE, BODY },
-                ID + "=?",
-                new String[] { String.valueOf(id) },
-                null, null, null, null
-        );
-
-        if (cursor != null)
-            cursor.moveToFirst();
-
-        SMS sms = new SMS(Integer.parseInt(cursor.getString(0)), cursor.getString(1), cursor.getString(2));
+        Cursor cursor = db.rawQuery(query, args);
+        int count = cursor.getCount();
         db.close();
         cursor.close();
-        return sms;
-    }
-    */
 
-    /*
-    public void deleteContact(SMS sms) {
-        SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE, ID + "=?", new String[] { String.valueOf(sms.getId()) });
-        db.close();
+        return count > 0;
     }
-    */
 
-    public int countSMS() {
+    public Integer count() {
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+        if (db == null) {
+            Exception e = new Exception("Couldn't get readable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return null;
+        }
+
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SMS, null);
         int count = cursor.getCount();
         db.close();
         cursor.close();
@@ -132,11 +133,16 @@ public class DBHandler extends SQLiteOpenHelper {
     }
     */
 
-    public List<SMS> getAllSMS() {
+    public List<SMS> getAll() {
         List<SMS> sms_list = new ArrayList<SMS>();
 
         SQLiteDatabase db = getWritableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+        if (db == null) {
+            Exception e = new Exception("Couldn't get writeable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return null;
+        }
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SMS, null);
         SMS sms;
 
         if (cursor.moveToFirst()) {
@@ -156,5 +162,35 @@ public class DBHandler extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         return sms_list;
+    }
+
+    public Integer getLastPendingSMSId(){
+        SQLiteDatabase db = getReadableDatabase();
+        if (db == null) {
+            Exception e = new Exception("Couldn't get readable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return null;
+        }
+        Cursor cursor = db.query(
+                TABLE_SMS,
+                new String[]{FIELD_SMS_ID},
+                "",
+                null,
+                null,
+                null,
+                FIELD_CREATED_AT + " DESC, " + FIELD_SMS_ID + " DESC",
+                "0,1"  // <offset>,<limit>
+        );
+
+        Integer last_id = null;
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            last_id = cursor.getInt(0);
+            cursor.close();
+        }
+
+        db.close();
+
+        return last_id;
     }
 }

@@ -90,29 +90,26 @@ public class APISMSDB {
     }
 
     public JSONObject check_response(String response_text, Integer response_code) {
-
-        if (response_code != 200) {
-            // TODO
-        }
-        if (response_text == null) {
-            // TODO throw exception. Submit error to server
-            String msg = "No response data.";
+        if (response_code != 200 && response_text == null) {
+            String msg = "API error:\n";
             if (response_code != null) {
-                msg += " Response code: " + Integer.toString(response_code);
+                msg += "Code: " + Integer.toString(response_code) + "\n";
             }
-            showToastIfAllowed(msg);
-        }else{
-            try	{
-                JSONObject payload = new JSONObject(response_text);
-                return payload;
-                // TODO check
-            } catch(JSONException e) {
-                ACRA.getErrorReporter().handleException(e);
+            if (response_text != null) {
+                msg += "Content:\n" + response_text + "\n";
             }
-            // TODO
-            showToastIfAllowed(response_text);
+            ACRA.getErrorReporter().handleException(new Exception(msg));
+            showToastIfAllowed("API Error");
+            return null;
         }
-        return null;
+
+        try	{
+            JSONObject payload = new JSONObject(response_text);
+            return payload;
+        } catch(JSONException e) {
+            ACRA.getErrorReporter().handleException(e);
+            return null;
+        }
     }
 
     protected String getSetting(String name) {
@@ -120,10 +117,24 @@ public class APISMSDB {
         return prefs.getString(name, "");
     }
 
-    protected void showToastIfAllowed(String msg){
-        if (!getSetting("notify").equals("yes")) return;
+    protected void showToast(String msg) {
         Toast t = Toast.makeText(context, msg, Toast.LENGTH_LONG);
         t.show();
+    }
+
+    protected void showToastIfAllowed(String msg){
+        if (!getSetting("notify").equals("yes")) return;
+        showToast(msg);
+    }
+
+    protected String getApiURLFor(String suffix){
+        String api_url = getSetting("api_url");
+        if (!api_url.startsWith("http")){
+            showToast("API URL seems to have set incorrectly!");
+            return null;
+        }
+        api_url += (api_url.endsWith("/") ? "" : "/") + suffix;
+        return api_url;
     }
 
     public void sms_received(String sms_sender, String sms_body) {
@@ -135,18 +146,32 @@ public class APISMSDB {
             ACRA.getErrorReporter().handleException(e);
         }
 
+        String api_url = getApiURLFor("sms_received/");
+        if (api_url == null) {
+            // What can we do. Just halt.
+            return;
+        }
         new RequestTask().execute(
                 "POST",
-                getSetting("api_url"),
+                api_url,
                 getSetting("api_key"),
-                payload.toString());
+                payload.toString()
+        );
     }
 
-    public void sms_pending() {
+    public void sms_pending(Integer last_id) {
+        String api_url = getApiURLFor("pending/");
+        if (api_url == null) {
+            // What can we do. Just halt.
+            return;
+        }
+        if (last_id != null) {
+            api_url += "?last_id=" + String.valueOf(last_id);
+        }
         new RequestTask().execute(
                 "GET",
-                "https://uweb.mn:8081/pending/",
-                "4h7NF63AAta6Svq4",
+                api_url,
+                getSetting("api_key"),
                 ""
         );
     }
