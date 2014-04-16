@@ -2,6 +2,7 @@ package mn.uweb.smsdbslave;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
@@ -24,16 +25,15 @@ public class ActivityMain extends ActionBarActivity {
     }
 
     protected boolean isCronServiceStarted(){
-        Intent i = new Intent("mn.uweb.smsdbslave.CronFetchSMS");
-        PendingIntent p = PendingIntent.getBroadcast(this, 8647, i, PendingIntent.FLAG_NO_CREATE);
-        return p != null;
+        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+        return prefs.getBoolean("cron_scheduled", false);
     }
 
     protected void updateTextForToggleButton(){
         if (isCronServiceStarted()) {
-            button_toggle_alarm.setText("Running. Click here to Stop periodic task");
+            button_toggle_alarm.setText("Running. Tap to Stop periodic task");
         }else{
-            button_toggle_alarm.setText("Stopped. Click here to Run periodic task");
+            button_toggle_alarm.setText("Stopped. Tap to Run periodic task");
         }
     }
 
@@ -52,7 +52,7 @@ public class ActivityMain extends ActionBarActivity {
                 updateTextForToggleButton();
                 button_toggle_alarm.setEnabled(true);
             }
-        }, 5000);
+        }, 2000);
     }
 
     @Override

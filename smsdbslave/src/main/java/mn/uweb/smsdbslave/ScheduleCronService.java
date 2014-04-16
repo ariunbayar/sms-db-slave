@@ -5,6 +5,7 @@ import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -19,20 +20,23 @@ public class ScheduleCronService extends IntentService{
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+
         AlarmManager service = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent i = new Intent("mn.uweb.smsdbslave.CronFetchSMS");
-        PendingIntent pending = PendingIntent.getBroadcast(this, 8647, i, PendingIntent.FLAG_CANCEL_CURRENT);
+        Intent i = new Intent(this, CronFetchSMS.class);
+        PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);
+
         if (intent.getStringExtra(MESSAGE).equals("start")) {
-            Log.i("*******", "starting");
+            prefs.edit().putBoolean("cron_scheduled", true).commit();
             service.setInexactRepeating(
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     SystemClock.elapsedRealtime(),
                     CRON_INTERVAL * 1000,
-                    pending
+                    pi
             );
         }else{
-            Log.i("*******", "stopping");
-            service.cancel(pending);
+            prefs.edit().putBoolean("cron_scheduled", false).commit();
+            service.cancel(pi);
         }
 
     }
