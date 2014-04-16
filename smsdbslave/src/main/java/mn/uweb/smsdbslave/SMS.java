@@ -1,27 +1,23 @@
 package mn.uweb.smsdbslave;
 
-import android.content.Context;
-
 import org.acra.ACRA;
-import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class SMS {
-    public final int STATUS_TO_SEND = 1;
-    public final int STATUS_SENDING = 2;
-    public final int STATUS_SENT = 3;
-    public final int STATUS_RECEIVED = 4;
+    public static final int STATUS_TO_SEND = 1;
+    public static final int STATUS_SENDING = 2;
+    public static final int STATUS_SENT = 3;
+    public static final int STATUS_RECEIVED = 4;
+    public static final int STATUS_SEND_FAIL = 5;
 
     private Integer _id = null;
     private String _phone;
     private String _body;
     private Integer _status;
     private Integer _sms_id = null;
-    private Integer _synced;
+    private Integer _synced = 0;
     private Long _created_at;
 
     public Integer getId() { return _id; }
@@ -51,6 +47,26 @@ public class SMS {
     public void setSynced(int synced) { _synced = synced; }
 
     public void setCreatedAt(long created_at) { _created_at = created_at; }
+
+    public String getCreatedAtDisplay() {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        return formatter.format(new Date(_created_at * 1000));
+    }
+
+    public String getStatusDisplay() {
+        switch (_status) {
+            case STATUS_TO_SEND: return "to_send";
+            case STATUS_SENDING: return "sending";
+            case STATUS_SENT: return "sent";
+            case STATUS_RECEIVED: return "received";
+            case STATUS_SEND_FAIL: return "send fail";
+            default: return "undefined";
+        }
+    }
+
+    public boolean isSynced() {
+        return _synced == 1;
+    }
 
     public boolean populateFromJson(JSONObject json) {
         // Currently only supported for sending sms (`/pending/`)

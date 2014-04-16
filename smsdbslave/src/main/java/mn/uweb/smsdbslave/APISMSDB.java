@@ -90,7 +90,7 @@ public class APISMSDB {
     }
 
     public JSONObject check_response(String response_text, Integer response_code) {
-        if (response_code != 200 && response_text == null) {
+        if (response_code == null || response_text == null || response_code != 200) {
             String msg = "API error:\n";
             if (response_code != null) {
                 msg += "Code: " + Integer.toString(response_code) + "\n";

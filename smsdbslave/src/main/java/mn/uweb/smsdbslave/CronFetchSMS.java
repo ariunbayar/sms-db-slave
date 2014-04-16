@@ -12,9 +12,12 @@ import org.acra.ACRA;
 import org.json.JSONException;
 
 public class CronFetchSMS extends BroadcastReceiver{
+    private DBHandler dbHandler;
+
     @Override
     public void onReceive(final Context context, Intent intent) {
-        final DBHandler dbhandler = new DBHandler(context);
+        dbHandler = new DBHandler(context);
+
         APISMSDB smsdb = new APISMSDB(context);
         smsdb.post_run = new PostAPIRunnable(){
             @Override
@@ -32,7 +35,7 @@ public class CronFetchSMS extends BroadcastReceiver{
                 }
                 SMS sms = new SMS();
                 if (sms.populateFromJson(this.json)) {
-                    Boolean has_duplicate = dbhandler.has(sms.getSMSId());
+                    Boolean has_duplicate = dbHandler.has(sms.getSMSId());
                     if (has_duplicate == null) {
                         // there is an error. Try next time. Halt!
                         return;
@@ -41,13 +44,13 @@ public class CronFetchSMS extends BroadcastReceiver{
                         Exception e = new Exception("Duplicate fetching! Optimization recommended.");
                         ACRA.getErrorReporter().handleException(e);
                     }else{
-                        dbhandler.insert(sms);
+                        dbHandler.insert(sms);
                         showToastIfAllowed(context, "pending sms to: " + sms.getPhone());
                     }
                 }
             }
         };
-        Integer last_id = dbhandler.getLastPendingSMSId();
+        Integer last_id = dbHandler.getLastPendingSMSId();
         smsdb.sms_pending(last_id);
     }
 

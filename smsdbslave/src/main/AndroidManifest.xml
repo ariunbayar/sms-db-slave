@@ -3,6 +3,9 @@
     package="mn.uweb.smsdbslave" >
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -21,17 +24,6 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name="mn.uweb.smsdbslave.EventSystemBoot" >
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="mn.uweb.smsdbslave.CronFetchSMS" />
-
-        <service
-            android:name="mn.uweb.smsdbslave.ScheduleCronService"
-            android:exported="false" />
-
         <activity
             android:name="mn.uweb.smsdbslave.ActivitySettings"
             android:label="@string/title_activity_settings"
@@ -40,6 +32,25 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="mn.uweb.smsdbslave.ActivityMain"/>
         </activity>
+
+        <receiver android:name="mn.uweb.smsdbslave.EventSystemBoot" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="mn.uweb.smsdbslave.EventSMSReceived">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="mn.uweb.smsdbslave.CronFetchSMS" />
+
+        <service
+            android:name="mn.uweb.smsdbslave.ScheduleCronService"
+            android:exported="false" />
+
     </application>
 
 </manifest>

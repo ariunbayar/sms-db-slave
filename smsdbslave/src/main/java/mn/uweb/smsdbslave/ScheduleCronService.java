@@ -38,6 +38,5 @@ public class ScheduleCronService extends IntentService{
             prefs.edit().putBoolean("cron_scheduled", false).commit();
             service.cancel(pi);
         }
-
     }
 }

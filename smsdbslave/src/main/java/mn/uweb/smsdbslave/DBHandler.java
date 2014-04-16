@@ -64,7 +64,7 @@ public class DBHandler extends SQLiteOpenHelper {
         if (sms.getSMSId() != null) {
             values.put(FIELD_SMS_ID, sms.getSMSId());
         }
-        values.put(FIELD_SYNCED, sms.getBody());
+        values.put(FIELD_SYNCED, sms.getSynced());
         values.put(FIELD_CREATED_AT, sms.getCreatedAt());
 
         SQLiteDatabase db = getWritableDatabase();
@@ -133,12 +133,21 @@ public class DBHandler extends SQLiteOpenHelper {
     }
     */
 
+    /*
+    public void deleteContact(SMS sms) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE, ID + "=?", new String[] { String.valueOf(sms.getId()) });
+        db.close();
+    }
+    */
+
+
     public List<SMS> getAll() {
         List<SMS> sms_list = new ArrayList<SMS>();
 
-        SQLiteDatabase db = getWritableDatabase();
+        SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
-            Exception e = new Exception("Couldn't get writeable database!");
+            Exception e = new Exception("Couldn't get readable database!");
             ACRA.getErrorReporter().handleException(e);
             return null;
         }
@@ -148,13 +157,13 @@ public class DBHandler extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
                 sms = new SMS();
-                sms.setId(Integer.parseInt(cursor.getString(0)));
+                sms.setId(cursor.getInt(0));
                 sms.setPhone(cursor.getString(1));
                 sms.setBody(cursor.getString(2));
-                sms.setStatus(Integer.parseInt(cursor.getString(3)));
-                sms.setSMSId(Integer.parseInt(cursor.getString(4)));
-                sms.setSynced(Integer.parseInt(cursor.getString(5)));
-                sms.setCreatedAt(Integer.parseInt(cursor.getString(6)));
+                sms.setStatus(cursor.getInt(3));
+                sms.setSMSId(cursor.getInt(4));
+                sms.setSynced(cursor.getInt(5));
+                sms.setCreatedAt(cursor.getInt(6));
                 sms_list.add(sms);
             }
             while (cursor.moveToNext());
@@ -172,14 +181,14 @@ public class DBHandler extends SQLiteOpenHelper {
             return null;
         }
         Cursor cursor = db.query(
-                TABLE_SMS,
-                new String[]{FIELD_SMS_ID},
-                "",
-                null,
-                null,
-                null,
-                FIELD_CREATED_AT + " DESC, " + FIELD_SMS_ID + " DESC",
-                "0,1"  // <offset>,<limit>
+            TABLE_SMS,
+            new String[]{FIELD_SMS_ID},
+            FIELD_STATUS + "=? AND " + FIELD_SYNCED + "!=?",
+            new String[] { String.valueOf(SMS.STATUS_TO_SEND), "1" },
+            null,
+            null,
+            FIELD_CREATED_AT + " DESC, " + FIELD_SMS_ID + " DESC",
+            "0,1"  // <offset>,<limit>
         );
 
         Integer last_id = null;
