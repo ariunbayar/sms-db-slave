@@ -22,12 +22,12 @@ public class ScheduleCronService extends IntentService{
     protected void onHandleIntent(Intent intent) {
         SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
 
-        AlarmManager service = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        AlarmManager service = (AlarmManager) getSystemService(ALARM_SERVICE);
         Intent i = new Intent(this, CronFetchSMS.class);
         PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);
 
         if (intent.getStringExtra(MESSAGE).equals("start")) {
-            prefs.edit().putBoolean("cron_scheduled", true).commit();
+            prefs.edit().putLong("last_cron_run", SystemClock.elapsedRealtime()).commit();
             service.setInexactRepeating(
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     SystemClock.elapsedRealtime(),
@@ -35,7 +35,7 @@ public class ScheduleCronService extends IntentService{
                     pi
             );
         }else{
-            prefs.edit().putBoolean("cron_scheduled", false).commit();
+            prefs.edit().putLong("last_cron_run", 0).commit();
             service.cancel(pi);
         }
     }

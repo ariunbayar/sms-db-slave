@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
+import android.os.SystemClock;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,7 +25,7 @@ public class ActivityMain extends ActionBarActivity {
 
     List<SMS> SMSList = new ArrayList<SMS>();
     Button button_toggle_alarm;
-
+    private Handler cronServiceNotifier;
 
     private class SMSListAdapter extends ArrayAdapter<SMS> {
         public SMSListAdapter() {
@@ -67,10 +69,34 @@ public class ActivityMain extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initList((ListView) findViewById(R.id.listSMS));
-
         button_toggle_alarm = (Button) findViewById(R.id.btnToggleAlarm);
-        updateTextForToggleButton();
+
+        initList((ListView) findViewById(R.id.listSMS));
+        initCronServiceNotifier();
+    }
+
+    protected void initCronServiceNotifier(){
+        cronServiceNotifier = new Handler () {
+            public void handleMessage (Message msg) {
+                if (button_toggle_alarm.isEnabled()){
+                    updateTextForToggleButton();
+                }
+            }
+        };
+
+        Thread timer = new Thread() {
+            public void run () {
+                for (;;) {
+                    cronServiceNotifier.sendEmptyMessage(0);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        timer.start();
     }
 
     protected void initList(ListView listSMS){
@@ -84,7 +110,10 @@ public class ActivityMain extends ActionBarActivity {
 
     protected boolean isCronServiceStarted(){
         SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
-        return prefs.getBoolean("cron_scheduled", false);
+        Long last_cron_run = prefs.getLong("last_cron_run", 0);
+        Long seconds_since_last_run = (SystemClock.elapsedRealtime() - last_cron_run) / 1000;
+        Boolean is_started =  seconds_since_last_run < ScheduleCronService.CRON_INTERVAL * 2;
+        return is_started;
     }
 
     protected void updateTextForToggleButton(){
@@ -110,7 +139,7 @@ public class ActivityMain extends ActionBarActivity {
                 updateTextForToggleButton();
                 button_toggle_alarm.setEnabled(true);
             }
-        }, 2000);
+        }, 500);
     }
 
     @Override

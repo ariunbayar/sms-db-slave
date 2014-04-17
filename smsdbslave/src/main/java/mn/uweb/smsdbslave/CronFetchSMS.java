@@ -11,6 +11,8 @@ import android.widget.Toast;
 import org.acra.ACRA;
 import org.json.JSONException;
 
+import java.util.Date;
+
 public class CronFetchSMS extends BroadcastReceiver{
     private DBHandler dbHandler;
 
@@ -52,6 +54,10 @@ public class CronFetchSMS extends BroadcastReceiver{
         };
         Integer last_id = dbHandler.getLastPendingSMSId();
         smsdb.sms_pending(last_id);
+
+        // Update last run date
+        SharedPreferences prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+        prefs.edit().putLong("last_cron_run", SystemClock.elapsedRealtime()).commit();
     }
 
     protected void showToastIfAllowed(Context context, String msg){
