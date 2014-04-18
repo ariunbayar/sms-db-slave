@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import org.acra.ACRA;
 
@@ -79,7 +80,7 @@ public class DBHandler extends SQLiteOpenHelper {
         return true;
     }
 
-    public Boolean has(int sms_id) {
+    public Boolean hasSMSId(int sms_id) {
         String query = "SELECT * FROM " + TABLE_SMS + " WHERE " + FIELD_SMS_ID + "=?";
         String[] args = new String[] { String.valueOf(sms_id) };
 
@@ -114,24 +115,29 @@ public class DBHandler extends SQLiteOpenHelper {
         return count;
     }
 
-    /*
-    public int updateContact(Contact contact) {
-        SQLiteDatabase db = getWritableDatabase();
-
+    public boolean updateSMS(SMS sms) {
         ContentValues values = new ContentValues();
+        values.put(FIELD_PHONE, sms.getPhone());
+        values.put(FIELD_BODY, sms.getBody());
+        values.put(FIELD_STATUS, sms.getStatus());
+        if (sms.getSMSId() != null) {
+            values.put(FIELD_SMS_ID, sms.getSMSId());
+        }
+        values.put(FIELD_SYNCED, sms.getSynced());
+        values.put(FIELD_CREATED_AT, sms.getCreatedAt());
 
-        values.put(KEY_NAME, contact.getName());
-        values.put(KEY_PHONE, contact.getPhone());
-        values.put(KEY_EMAIL, contact.getEmail());
-        values.put(KEY_ADDRESS, contact.getAddress());
-        values.put(KEY_IMAGEURI, contact.getImageURI().toString());
+        SQLiteDatabase db = getWritableDatabase();
+        if (db == null) {
+            Exception e = new Exception("Couldn't get writable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return false;
+        }
 
-        int rowsAffected = db.update(TABLE_CONTACTS, values, KEY_ID + "=?", new String[] { String.valueOf(contact.getId()) });
+        int rowsAffected = db.update(TABLE_SMS, values, FIELD_ID + "=?", new String[] { String.valueOf(sms.getId()) });
         db.close();
 
-        return rowsAffected;
+        return rowsAffected > 0;
     }
-    */
 
     /*
     public void deleteContact(SMS sms) {
@@ -140,7 +146,6 @@ public class DBHandler extends SQLiteOpenHelper {
         db.close();
     }
     */
-
 
     public List<SMS> getAll() {
         List<SMS> sms_list = new ArrayList<SMS>();
@@ -151,7 +156,7 @@ public class DBHandler extends SQLiteOpenHelper {
             ACRA.getErrorReporter().handleException(e);
             return null;
         }
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SMS, null);
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_SMS + " ORDER BY " + FIELD_CREATED_AT + " ASC, " + FIELD_ID + " ASC", null);
         SMS sms;
 
         if (cursor.moveToFirst()) {
@@ -174,6 +179,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     public Integer getLastPendingSMSId(){
+        /* It is generally used to retrieve next pending SMS by last id from the API */
         SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
             Exception e = new Exception("Couldn't get readable database!");
@@ -183,8 +189,8 @@ public class DBHandler extends SQLiteOpenHelper {
         Cursor cursor = db.query(
             TABLE_SMS,
             new String[]{FIELD_SMS_ID},
-            FIELD_STATUS + "=? AND " + FIELD_SYNCED + "!=?",
-            new String[] { String.valueOf(SMS.STATUS_TO_SEND), "1" },
+            FIELD_STATUS + "=? AND " + FIELD_SYNCED + "=0",
+            new String[] { String.valueOf(SMS.STATUS_TO_SEND) },
             null,
             null,
             FIELD_CREATED_AT + " DESC, " + FIELD_SMS_ID + " DESC",
@@ -201,5 +207,77 @@ public class DBHandler extends SQLiteOpenHelper {
         db.close();
 
         return last_id;
+    }
+
+    public SMS getFirstPendingSMS(){
+        SQLiteDatabase db = getReadableDatabase();
+        if (db == null) {
+            Exception e = new Exception("Couldn't get readable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return null;
+        }
+        Cursor cursor = db.query(
+                TABLE_SMS,
+                new String[]{FIELD_ID, FIELD_PHONE, FIELD_BODY, FIELD_STATUS, FIELD_SMS_ID, FIELD_SYNCED, FIELD_CREATED_AT},
+                FIELD_STATUS + "=? AND " + FIELD_SYNCED + "=0",
+                new String[] { String.valueOf(SMS.STATUS_TO_SEND) },
+                null,
+                null,
+                FIELD_CREATED_AT + " ASC, " + FIELD_SMS_ID + " ASC",
+                "0,1"  // <offset>,<limit>
+        );
+
+        SMS sms = null;
+        if (cursor != null && cursor.getCount() == 1) {
+            cursor.moveToFirst();
+            sms = new SMS();
+            sms.setId(cursor.getInt(0));
+            sms.setPhone(cursor.getString(1));
+            sms.setBody(cursor.getString(2));
+            sms.setStatus(cursor.getInt(3));
+            sms.setSMSId(cursor.getInt(4));
+            sms.setSynced(cursor.getInt(5));
+            sms.setCreatedAt(cursor.getInt(6));
+            cursor.close();
+        }
+        db.close();
+
+        return sms;
+    }
+
+    public SMS getSMSByIdAndStatus(int id, int status){
+        SQLiteDatabase db = getReadableDatabase();
+        if (db == null) {
+            Exception e = new Exception("Couldn't get readable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return null;
+        }
+        Cursor cursor = db.query(
+                TABLE_SMS,
+                new String[]{FIELD_ID, FIELD_PHONE, FIELD_BODY, FIELD_STATUS, FIELD_SMS_ID, FIELD_SYNCED, FIELD_CREATED_AT},
+                FIELD_STATUS + "=? AND " + FIELD_SYNCED + "=0 AND " + FIELD_ID + "=?",
+                new String[] { String.valueOf(status), String.valueOf(id) },
+                null,  // group by
+                null,  // having
+                null,  // order by
+                "0,1"  // <offset>,<limit>
+        );
+
+        SMS sms = null;
+        if (cursor != null && cursor.getCount() == 1) {
+            cursor.moveToFirst();
+            sms = new SMS();
+            sms.setId(cursor.getInt(0));
+            sms.setPhone(cursor.getString(1));
+            sms.setBody(cursor.getString(2));
+            sms.setStatus(cursor.getInt(3));
+            sms.setSMSId(cursor.getInt(4));
+            sms.setSynced(cursor.getInt(5));
+            sms.setCreatedAt(cursor.getInt(6));
+            cursor.close();
+        }
+        db.close();
+
+        return sms;
     }
 }

@@ -112,7 +112,7 @@ public class ActivityMain extends ActionBarActivity {
         SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
         Long last_cron_run = prefs.getLong("last_cron_run", 0);
         Long seconds_since_last_run = (SystemClock.elapsedRealtime() - last_cron_run) / 1000;
-        Boolean is_started =  seconds_since_last_run < ScheduleCronService.CRON_INTERVAL * 2;
+        Boolean is_started =  seconds_since_last_run < ServiceScheduleCron.CRON_INTERVAL * 2;
         return is_started;
     }
 
@@ -126,9 +126,9 @@ public class ActivityMain extends ActionBarActivity {
 
     public void toggleAlarm(View view){
         button_toggle_alarm.setEnabled(false);
-        Intent cron_service_intent = new Intent(this, ScheduleCronService.class);
+        Intent cron_service_intent = new Intent(this, ServiceScheduleCron.class);
         String message = (isCronServiceStarted() ? "stop" : "start");
-        cron_service_intent.putExtra(ScheduleCronService.MESSAGE, message);
+        cron_service_intent.putExtra(ServiceScheduleCron.MESSAGE, message);
         startService(cron_service_intent);
 
         button_toggle_alarm.setText("Please wait ...");

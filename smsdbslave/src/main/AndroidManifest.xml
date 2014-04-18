@@ -15,7 +15,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="mn.uweb.smsdbslave.ActivityMain"
+            android:name=".ActivityMain"
             android:label="@string/title_activity_main" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,7 +25,7 @@
         </activity>
 
         <activity
-            android:name="mn.uweb.smsdbslave.ActivitySettings"
+            android:name=".ActivitySettings"
             android:label="@string/title_activity_settings"
             android:parentActivityName="mn.uweb.smsdbslave.ActivityMain">
             <meta-data
@@ -33,23 +33,39 @@
                 android:value="mn.uweb.smsdbslave.ActivityMain"/>
         </activity>
 
-        <receiver android:name="mn.uweb.smsdbslave.EventSystemBoot" >
+        <receiver android:name=".EventSystemBoot" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name="mn.uweb.smsdbslave.EventSMSReceived">
+        <receiver android:name=".EventSMSReceived">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name="mn.uweb.smsdbslave.CronFetchSMS" />
+        <receiver android:name=".EventSMSSent">
+            <intent-filter>
+                <action android:name="mn.uweb.smsdbslave.SENT"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".EventSMSDelivery">
+            <intent-filter>
+                <action android:name="mn.uweb.smsdbslave.DELIVERY"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".CronFetchSMS"/>
 
         <service
-            android:name="mn.uweb.smsdbslave.ScheduleCronService"
-            android:exported="false" />
+            android:name=".ServiceScheduleCron"
+            android:exported="false"/>
+
+        <service
+            android:name=".ServiceSMSSender"
+            android:exported="false"/>
 
     </application>
 

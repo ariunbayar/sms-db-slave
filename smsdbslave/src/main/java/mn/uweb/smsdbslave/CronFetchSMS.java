@@ -5,21 +5,28 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
-import android.util.Log;
 import android.widget.Toast;
 
 import org.acra.ACRA;
-import org.json.JSONException;
-
-import java.util.Date;
 
 public class CronFetchSMS extends BroadcastReceiver{
     private DBHandler dbHandler;
 
     @Override
-    public void onReceive(final Context context, Intent intent) {
+    public void onReceive(Context context, Intent intent) {
         dbHandler = new DBHandler(context);
 
+        fetchPendingSMS(context);
+        sendPendingSMS(context);
+        submitSentSMS(context);
+        submitReceivedSMS(context);
+
+        // Update last run date
+        SharedPreferences prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+        prefs.edit().putLong("last_cron_run", SystemClock.elapsedRealtime()).commit();
+    }
+
+    protected void fetchPendingSMS(final Context context){
         APISMSDB smsdb = new APISMSDB(context);
         smsdb.post_run = new PostAPIRunnable(){
             @Override
@@ -37,7 +44,7 @@ public class CronFetchSMS extends BroadcastReceiver{
                 }
                 SMS sms = new SMS();
                 if (sms.populateFromJson(this.json)) {
-                    Boolean has_duplicate = dbHandler.has(sms.getSMSId());
+                    Boolean has_duplicate = dbHandler.hasSMSId(sms.getSMSId());
                     if (has_duplicate == null) {
                         // there is an error. Try next time. Halt!
                         return;
@@ -54,10 +61,19 @@ public class CronFetchSMS extends BroadcastReceiver{
         };
         Integer last_id = dbHandler.getLastPendingSMSId();
         smsdb.sms_pending(last_id);
+    }
 
-        // Update last run date
-        SharedPreferences prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE);
-        prefs.edit().putLong("last_cron_run", SystemClock.elapsedRealtime()).commit();
+    protected void sendPendingSMS(Context context) {
+        Intent sms_sender_intent = new Intent(context, ServiceSMSSender.class);
+        context.startService(sms_sender_intent);
+    }
+
+    protected void submitSentSMS(Context context) {
+
+    }
+
+    protected void submitReceivedSMS(Context context) {
+
     }
 
     protected void showToastIfAllowed(Context context, String msg){

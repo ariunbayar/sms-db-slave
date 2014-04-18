@@ -9,12 +9,12 @@ import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.util.Log;
 
-public class ScheduleCronService extends IntentService{
+public class ServiceScheduleCron extends IntentService{
     // TODO read from settings
     public static final Integer CRON_INTERVAL = 20;
-    public static final String MESSAGE = "mn.uweb.smsdbslave.ScheduleCronService.MESSAGE";
+    public static final String MESSAGE = "mn.uweb.smsdbslave.ServiceScheduleCron.MESSAGE";
 
-    public ScheduleCronService() {
+    public ServiceScheduleCron() {
         super("");
     }
 
