@@ -3,15 +3,13 @@ package mn.uweb.smsdbslave;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
-import android.util.Log;
 
 public class ServiceScheduleCron extends IntentService{
     // TODO read from settings
-    public static final Integer CRON_INTERVAL = 20;
+    public static final Integer CRON_INTERVAL = 60;
     public static final String MESSAGE = "mn.uweb.smsdbslave.ServiceScheduleCron.MESSAGE";
 
     public ServiceScheduleCron() {

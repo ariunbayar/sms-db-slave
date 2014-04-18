@@ -2,9 +2,7 @@ package mn.uweb.smsdbslave;
 
 import android.app.IntentService;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.telephony.SmsManager;
 import android.util.Log;
 
@@ -22,7 +20,7 @@ public class ServiceSMSSender extends IntentService {
         // There might not be any pending sms
         if (sms == null) return;
 
-        // TODO validate empty sms body. Set to failed
+        // TODO validate empty sms body. Sending failed
         String body = (sms.getBody() == null ? " " : sms.getBody());
 
         String SENT = "mn.uweb.smsdbslave.SENT";
@@ -33,8 +31,8 @@ public class ServiceSMSSender extends IntentService {
         Intent deliveryIntent = new Intent(DELIVERY);
         sentIntent.putExtra("id", sms.getId());
         deliveryIntent.putExtra("id", sms.getId());
-        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, sentIntent, 0);
-        PendingIntent deliveryPI = PendingIntent.getBroadcast(this, 0, deliveryIntent, 0);
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, sms.getId(), sentIntent, 0);
+        PendingIntent deliveryPI = PendingIntent.getBroadcast(this, sms.getId(), deliveryIntent, 0);
 
         // send the text message
         SmsManager smsManager = SmsManager.getDefault();
