@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
+import android.util.Log;
 import android.widget.Toast;
 
 import org.acra.ACRA;
@@ -59,7 +60,9 @@ public class CronFetchSMS extends BroadcastReceiver{
                 }
             }
         };
-        Integer last_id = dbHandler.getLastPendingSMSId();
+        // When there is no pending SMS, it means that all sms are synced to SMSDB and removed.
+        // In that case we should rely on last_pending_sms_id in SharedPreferences
+        Integer last_id = dbHandler.getLastSMSIdForPending();
         smsdb.sms_pending(last_id);
     }
 

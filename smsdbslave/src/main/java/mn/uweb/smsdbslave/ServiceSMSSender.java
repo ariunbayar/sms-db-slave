@@ -15,8 +15,6 @@ public class ServiceSMSSender extends IntentService {
     protected void onHandleIntent(Intent intent) {
         SMS sms = new DBHandler(this).getFirstPendingSMS();
 
-        Log.i("*********", "next sms: " + (sms != null ? String.valueOf(sms.getId()) : "NULL"));
-
         // There might not be any pending sms
         if (sms == null) return;
 

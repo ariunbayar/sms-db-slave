@@ -178,7 +178,7 @@ public class DBHandler extends SQLiteOpenHelper {
         return sms_list;
     }
 
-    public Integer getLastPendingSMSId(){
+    public Integer getLastSMSIdForPending(){
         /* It is generally used to retrieve next pending SMS by last id from the API */
         SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
@@ -186,11 +186,17 @@ public class DBHandler extends SQLiteOpenHelper {
             ACRA.getErrorReporter().handleException(e);
             return null;
         }
+        String[] args = new String[]{
+                String.valueOf(SMS.STATUS_TO_SEND),
+                String.valueOf(SMS.STATUS_SENDING),
+                String.valueOf(SMS.STATUS_SENT),
+                String.valueOf(SMS.STATUS_SEND_FAIL)
+        };
         Cursor cursor = db.query(
             TABLE_SMS,
             new String[]{FIELD_SMS_ID},
-            FIELD_STATUS + "=? AND " + FIELD_SYNCED + "=0",
-            new String[] { String.valueOf(SMS.STATUS_TO_SEND) },
+            "(" + FIELD_STATUS + " IN (?, ?, ?, ?)) AND " + FIELD_SYNCED + "=0",
+            args,
             null,
             null,
             FIELD_CREATED_AT + " DESC, " + FIELD_SMS_ID + " DESC",
