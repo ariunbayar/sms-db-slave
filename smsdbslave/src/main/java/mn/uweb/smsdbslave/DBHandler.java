@@ -195,7 +195,7 @@ public class DBHandler extends SQLiteOpenHelper {
         Cursor cursor = db.query(
             TABLE_SMS,
             new String[]{FIELD_SMS_ID},
-            "(" + FIELD_STATUS + " IN (?, ?, ?, ?)) AND " + FIELD_SYNCED + "=0",
+            FIELD_STATUS + " IN (?, ?, ?, ?) AND " + FIELD_SYNCED + "=0",
             args,
             null,
             null,
