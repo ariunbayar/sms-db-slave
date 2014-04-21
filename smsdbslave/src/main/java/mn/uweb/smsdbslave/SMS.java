@@ -49,7 +49,7 @@ public class SMS {
     public void setCreatedAt(long created_at) { _created_at = created_at; }
 
     public String getCreatedAtDisplay() {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss Z");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         return formatter.format(new Date(_created_at * 1000));
     }
 
@@ -69,16 +69,18 @@ public class SMS {
     }
 
     public boolean populateFromJson(JSONObject json) {
-        // Currently only supported for sending sms (`/pending/`)
         try {
             if (json.has("id")) setSMSId(json.getInt("id"));
             if (json.has("phone")) setPhone(json.getString("phone"));
             if (json.has("body")) setBody(json.getString("body"));
-            if (json.has("status") && json.getString("status").equals("sending")) {
-                setStatus(STATUS_TO_SEND);
+            if (json.has("status")){
+                if (json.getString("status").equals("sending"))
+                    setStatus(STATUS_TO_SEND);
+                if (json.getString("status").equals("received"))
+                    setStatus(STATUS_RECEIVED);
             }
             if (json.has("created_at")) {
-                SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ssZ");
+                SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
                 Date d = parser.parse(json.getString("created_at"));
                 setCreatedAt(d.getTime() / 1000);
             }

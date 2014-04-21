@@ -90,7 +90,7 @@ public class APISMSDB {
     }
 
     public JSONObject check_response(String response_text, Integer response_code) {
-        if (response_code == null || response_text == null || response_code != 200) {
+        if (response_code == null || response_text == null || (response_code != 200 && response_code != 201)) {
             String msg = "API error:\n";
             if (response_code != null) {
                 msg += "Code: " + Integer.toString(response_code) + "\n";
@@ -137,20 +137,20 @@ public class APISMSDB {
         return api_url;
     }
 
-    public void sms_received(String sms_sender, String sms_body) {
+    public void sms_received(SMS sms) {
         JSONObject payload = new JSONObject();
         try {
-            payload.put("phone", sms_sender);
-            payload.put("body", sms_body);
+            payload.put("phone", sms.getPhone());
+            payload.put("body", sms.getBody());
+            payload.put("created_at", sms.getCreatedAtDisplay());
         } catch(JSONException e) {
             ACRA.getErrorReporter().handleException(e);
+            return;
         }
 
         String api_url = getApiURLFor("sms_received/");
-        if (api_url == null) {
-            // What can we do. Just halt.
-            return;
-        }
+        if (api_url == null) return;
+
         new RequestTask().execute(
                 "POST",
                 api_url,

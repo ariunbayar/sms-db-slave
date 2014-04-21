@@ -13,7 +13,7 @@ public class ServiceSMSSender extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        SMS sms = new DBHandler(this).getFirstPendingSMS();
+        SMS sms = new DBHandler(this).getFirstSMSByStatus(SMS.STATUS_TO_SEND);
 
         // There might not be any pending sms
         if (sms == null) return;

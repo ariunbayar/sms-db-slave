@@ -215,7 +215,7 @@ public class DBHandler extends SQLiteOpenHelper {
         return last_id;
     }
 
-    public SMS getFirstPendingSMS(){
+    public SMS getFirstSMSByStatus(int status){
         SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
             Exception e = new Exception("Couldn't get readable database!");
@@ -226,7 +226,7 @@ public class DBHandler extends SQLiteOpenHelper {
                 TABLE_SMS,
                 new String[]{FIELD_ID, FIELD_PHONE, FIELD_BODY, FIELD_STATUS, FIELD_SMS_ID, FIELD_SYNCED, FIELD_CREATED_AT},
                 FIELD_STATUS + "=? AND " + FIELD_SYNCED + "=0",
-                new String[] { String.valueOf(SMS.STATUS_TO_SEND) },
+                new String[] { String.valueOf(status) },
                 null,
                 null,
                 FIELD_CREATED_AT + " ASC, " + FIELD_SMS_ID + " ASC",
