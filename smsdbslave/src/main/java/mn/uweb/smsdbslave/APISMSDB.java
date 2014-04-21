@@ -35,11 +35,6 @@ public class APISMSDB {
             String api_key = args[2];
             String payload = args[3];
 
-            // TODO what if there is no Internet connection
-            // TODO what if submitted API key was invalid
-            // TODO what if API server responded with 500 error
-            // TODO what if server returned valid JSON with failure message
-
             try {
                 URL url_rs = new URL(api_url);
                 HttpURLConnection conn = (HttpURLConnection) url_rs.openConnection();
@@ -173,6 +168,27 @@ public class APISMSDB {
                 api_url,
                 getSetting("api_key"),
                 ""
+        );
+    }
+
+    public void sms_sent(SMS sms) {
+        JSONObject payload = new JSONObject();
+        try {
+            payload.put("id", sms.getSMSId());
+            payload.put("sent", sms.getStatus() == SMS.STATUS_SENT ? 1 : 0);
+        } catch(JSONException e) {
+            ACRA.getErrorReporter().handleException(e);
+            return;
+        }
+
+        String api_url = getApiURLFor("sent/");
+        if (api_url == null) return;
+
+        new RequestTask().execute(
+                "POST",
+                api_url,
+                getSetting("api_key"),
+                payload.toString()
         );
     }
 }

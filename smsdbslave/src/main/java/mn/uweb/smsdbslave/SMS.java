@@ -6,10 +6,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class SMS {
+    // waiting to be sent
     public static final int STATUS_TO_SEND = 1;
+    // sending. To be updated by delivery report
     public static final int STATUS_SENDING = 2;
+    // sent. Gonna be SYNCED
     public static final int STATUS_SENT = 3;
+    // received. Gonna be SYNCED
     public static final int STATUS_RECEIVED = 4;
+    // failed to send. Gonna be SYNCED
     public static final int STATUS_SEND_FAIL = 5;
 
     private Integer _id = null;
@@ -78,6 +83,10 @@ public class SMS {
                     setStatus(STATUS_TO_SEND);
                 if (json.getString("status").equals("received"))
                     setStatus(STATUS_RECEIVED);
+                if (json.getString("status").equals("sent"))
+                    setStatus(STATUS_SENT);
+                if (json.getString("status").equals("send failed"))
+                    setStatus(STATUS_SEND_FAIL);
             }
             if (json.has("created_at")) {
                 SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");

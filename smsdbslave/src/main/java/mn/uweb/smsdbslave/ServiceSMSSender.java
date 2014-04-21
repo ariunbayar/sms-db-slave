@@ -34,6 +34,7 @@ public class ServiceSMSSender extends IntentService {
 
         // send the text message
         SmsManager smsManager = SmsManager.getDefault();
-        smsManager.sendTextMessage("+97699437911", null, body, sentPI, deliveryPI);  // TODO use sms.getPhone.
+        // TODO for debugging purposes. For production, use sms.getPhone()
+        smsManager.sendTextMessage("+97699437911", null, body, sentPI, deliveryPI);
     }
 }

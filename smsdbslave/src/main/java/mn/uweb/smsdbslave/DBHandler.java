@@ -5,11 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import org.acra.ACRA;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class DBHandler extends SQLiteOpenHelper {
@@ -139,13 +139,39 @@ public class DBHandler extends SQLiteOpenHelper {
         return rowsAffected > 0;
     }
 
-    /*
-    public void deleteContact(SMS sms) {
+    public void deleteSyncedSMS() {
         SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE, ID + "=?", new String[] { String.valueOf(sms.getId()) });
+        if (db == null) {
+            Exception e = new Exception("Couldn't get writable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return;
+        }
+        db.delete(TABLE_SMS, FIELD_SYNCED + "=1", null);
         db.close();
     }
-    */
+
+    public boolean updateExpiredSendingSMS() {
+        ContentValues values = new ContentValues();
+        values.put(FIELD_STATUS, SMS.STATUS_SEND_FAIL);
+
+        SQLiteDatabase db = getWritableDatabase();
+        if (db == null) {
+            Exception e = new Exception("Couldn't get writable database!");
+            ACRA.getErrorReporter().handleException(e);
+            return false;
+        }
+
+        String remove_until = String.valueOf(new Date().getTime() / 1000);
+        int rowsAffected = db.update(
+                TABLE_SMS,
+                values,
+                FIELD_STATUS + "=? AND " + FIELD_CREATED_AT + "<?",
+                new String[]{String.valueOf(SMS.STATUS_SENDING), remove_until}
+        );
+        db.close();
+
+        return rowsAffected > 0;
+    }
 
     public List<SMS> getAll() {
         List<SMS> sms_list = new ArrayList<SMS>();
@@ -215,18 +241,26 @@ public class DBHandler extends SQLiteOpenHelper {
         return last_id;
     }
 
-    public SMS getFirstSMSByStatus(int status){
+    public SMS getFirstSMSByStatus(int... status){
         SQLiteDatabase db = getReadableDatabase();
         if (db == null) {
             Exception e = new Exception("Couldn't get readable database!");
             ACRA.getErrorReporter().handleException(e);
             return null;
         }
+
+        StringBuilder in_clause = new StringBuilder();
+        String[] args = new String[status.length];
+        for (int i=0; i < status.length; i++) {
+            in_clause.append((i == 0 ? "" : ",") + "?");
+            args[i] = String.valueOf(status[i]);
+        }
+
         Cursor cursor = db.query(
                 TABLE_SMS,
                 new String[]{FIELD_ID, FIELD_PHONE, FIELD_BODY, FIELD_STATUS, FIELD_SMS_ID, FIELD_SYNCED, FIELD_CREATED_AT},
-                FIELD_STATUS + "=? AND " + FIELD_SYNCED + "=0",
-                new String[] { String.valueOf(status) },
+                FIELD_STATUS + " IN (" + in_clause + ") AND " + FIELD_SYNCED + "=0",
+                args,
                 null,
                 null,
                 FIELD_CREATED_AT + " ASC, " + FIELD_SMS_ID + " ASC",
