@@ -1,3 +1,10 @@
+Warning
+=======
+
+There is already a nice open-source implementation of this application on android: [SMSSync](https://github.com/ushahidi/SMSSync)
+
+
+
 sms-db-slave
 ============
 
